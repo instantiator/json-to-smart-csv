@@ -1,0 +1,2 @@
+TargetColumn,SourcePath,Interpretation,InterpretationRule
+"id","$.id","AsString",

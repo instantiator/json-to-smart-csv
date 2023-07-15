@@ -1,0 +1,4 @@
+.vscode
+*.backup
+bin/
+obj/
