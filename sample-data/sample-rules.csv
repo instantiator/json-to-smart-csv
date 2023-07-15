@@ -1,2 +1,4 @@
 TargetColumn,SourcePath,Interpretation,InterpretationRule
 "id","$.id","AsString",
+"name","$.name","AsString",
+"deliciousness","$.stats.deliciousness","AsDecimal",

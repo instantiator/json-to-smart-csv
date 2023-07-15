@@ -29,7 +29,6 @@ Source interpretations:
   AsListCount          = as the number of items in the list (array)
 ```
 
-
 See `test-sample.sh` for an example.
 
 

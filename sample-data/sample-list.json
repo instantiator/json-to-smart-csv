@@ -1,6 +1,6 @@
 [
-    { "id": "00001" },
-    { "id": "00002" },
-    { "id": "00003" },
-    { "id": "00004" }
+    { "id": "00001", "name": "artichoke", "stats": { "deliciousness": 0.2 } },
+    { "id": "00002", "name": "bell pepper", "stats": { "deliciousness": 0.4 } },
+    { "id": "00003", "name": "carrot", "stats": { "deliciousness": 0.6 } },
+    { "id": "00004", "name": "dill pickle", "stats": { "deliciousness": 0.8 } }
 ]

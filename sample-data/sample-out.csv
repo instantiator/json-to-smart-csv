@@ -1,5 +1,5 @@
-id
-00001
-00002
-00003
-00004
+id,name,deliciousness
+00001,artichoke,0.2
+00002,bell pepper,0.4
+00003,carrot,0.6
+00004,dill pickle,0.8
