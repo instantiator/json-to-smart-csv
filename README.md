@@ -20,11 +20,11 @@ Options:
   -c <file>       --columns <file>    Column definitions CSV file (required)
   -s <file>       --source <file>     Input data JSON file        (required)
   -t <file>       --target <file>     Target CSV file             (required)
-  -m <mode>       --mode <mode>       Mode                        (default: $MODE)
-  -r <path>       --root <path>       Root path                   (default: $ROOT)
+  -m <mode>       --mode <mode>       Mode                        (default: Create)
+  -r <path>       --root <path>       Root path                   (default: $)
 
 Path:
-  Provide a JSON path to the root note to process. The default is: $ROOT
+  Provide a JSON path to the root note to process. The default is: $
   If this points to a single object, {}, the object will be processed to a single row.
   If this points to an array, [], each object in the array will be processed to a row.
 
