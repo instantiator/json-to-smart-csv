@@ -7,7 +7,7 @@
 * [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/download) - used to build and run the tool
 * [bash](https://www.gnu.org/software/bash/) - shell scripting language
 
-**Disclaimer:** This tool was developed on Mac OS, and I've done no testing on any other systems. You may find you need to adjust or replace `json-to-smart-csv.sh` for Windows or Linux systems.
+**Disclaimer:** This tool was developed on Mac OS, and I've done no testing on any other systems. You may find you need to adjust or replace `json-to-smart-csv.sh` for Windows or Linux systems. If you do, please upstream your changes as a pull request.
 
 ## Usage
 
