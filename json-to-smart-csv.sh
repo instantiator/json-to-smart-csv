@@ -11,7 +11,7 @@ usage() {
   cat << EOF
 Usage: json-to-smart-csv.sh [options]
 
-Converts an input JSON file to CSV, using smart rules to select values for columns.
+Converts an input JSON file to CSV, using some (fairly) smart rules to select values for columns.
 
 Options:
   -c <file>       --columns <file>    Rules CSV file     (required)
@@ -113,4 +113,7 @@ echo "Source root path:   $ROOT"
 echo "Target file (csv):  $TARGET_FILE_CSV"
 echo "Mode:               $MODE"
 
-dotnet run --project JsonToSmartCsv/JsonToSmartCsv.csproj -- $COLS_FILE_CSV $SOURCE_FILE_JSON $ROOT $TARGET_FILE_CSV $MODE
+dotnet run --project JsonToSmartCsv/JsonToSmartCsv.csproj -- \
+  $COLS_FILE_CSV \
+  $SOURCE_FILE_JSON $ROOT \
+  $TARGET_FILE_CSV $MODE
