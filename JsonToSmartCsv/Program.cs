@@ -1,4 +1,5 @@
 ﻿using JsonToSmartCsv.Builder;
+using JsonToSmartCsv.Reader;
 using JsonToSmartCsv.Rules;
 using JsonToSmartCsv.Writer;
 using Newtonsoft.Json.Linq;
@@ -15,21 +16,24 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var configFile_csv = args[0];
-        if (string.IsNullOrWhiteSpace(configFile_csv) || !File.Exists(configFile_csv))
+        var colsFile_csv = args[0];
+        var sourceFile_json = args[1];
+        var root_path = args[2];
+        var targetFile_csv = args[3];
+        var modeStr = args[4];
+
+        if (string.IsNullOrWhiteSpace(colsFile_csv) || !File.Exists(colsFile_csv))
         {
             Console.WriteLine("Please provide a column specification config file.");
             return;
         }
 
-        var sourceFile_json = args[1];
         if (string.IsNullOrWhiteSpace(sourceFile_json) || !File.Exists(sourceFile_json))
         {
             Console.WriteLine("Please provide a source json file.");
             return;
         }
 
-        var targetFile_csv = args[2];
         if (string.IsNullOrWhiteSpace(targetFile_csv))
         {
             Console.WriteLine("Please provide a target file to create.");
@@ -37,18 +41,20 @@ public class Program
         }
 
         ProcessingMode mode;
-        var modeOk = Enum.TryParse<ProcessingMode>(args[3], out mode);
+        var modeOk = Enum.TryParse<ProcessingMode>(modeStr, out mode);
         if (!modeOk)
         {
-            Console.WriteLine($"Please provide a valid processing mode: {string.Join(", ", Enum.GetValues<ProcessingMode>())}");
+            Console.WriteLine($"Please provide a valid processing mode. Choices are: {string.Join(", ", Enum.GetValues<ProcessingMode>())}");
             return;
         }
 
-        Console.WriteLine($"Reading rules: {configFile_csv}");
-        var rules = RulesReader.FromFile(configFile_csv);
+        var root = root_path ?? "$";
+
+        Console.WriteLine($"Reading rules: {colsFile_csv}");
+        var rules = RulesReader.FromFile(colsFile_csv);
 
         Console.WriteLine($"Reading source json: {sourceFile_json}");
-        var source = JToken.Parse(File.ReadAllText(sourceFile_json));
+        var source = SmartJsonReader.Read(sourceFile_json, root);
 
         Console.WriteLine($"Preparing records...");
         var records = RecordBuilder.BuildRecords(source, rules);

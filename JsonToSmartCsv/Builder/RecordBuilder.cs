@@ -4,6 +4,8 @@ using System.Linq;
 
 namespace JsonToSmartCsv.Builder;
 
+public enum Aggregation { Sum, Avg, Max, Min, Count }
+
 public class RecordBuilder
 {
     public static IEnumerable<string> GetHeaders(RulesSet rules)
@@ -49,14 +51,17 @@ public class RecordBuilder
                 case SourceInterpretation.AsBoolean:
                     record.Add(token?.Value<bool>());
                     break;
-                case SourceInterpretation.AsObjectAsJson:
+                case SourceInterpretation.AsJson:
                     record.Add(token?.ToString(Newtonsoft.Json.Formatting.Indented));
                     break;
-                case SourceInterpretation.AsListAsJson:
-                    record.Add(token?.ToString(Newtonsoft.Json.Formatting.Indented));
+                case SourceInterpretation.AsCount:
+                    record.Add(CountToken(token));
                     break;
-                case SourceInterpretation.AsListCount:
-                    record.Add((token as JArray)?.Count);
+                case SourceInterpretation.AsConcatenation:
+                    record.Add(ConcatenateElements(token, col.InterpretationArg1!, col.InterpretationArg2!));
+                    break;
+                case SourceInterpretation.AsAggregate:
+                    record.Add(AggregateElements(token, col.InterpretationArg1!, col.InterpretationArg2!));
                     break;
                 default:
                     throw new Exception($"Unexpected interpretation: {col.Interpretation}");
@@ -65,4 +70,65 @@ public class RecordBuilder
         return record;
     }
 
+    private static int? CountToken(JToken? token)
+    {
+        if (token is JArray) {
+            return (token as JArray)?.Count;
+        } else {
+            return token == null ? 0 : 1;
+        }
+    }
+
+    public static string? ConcatenateElements(JToken? token, string path, string separator)
+    {
+        if (token == null) { return null; }
+        if (token is JArray)
+        {
+            return string.Join(separator, (token as JArray)!.Select(item => item.SelectToken(path)?.Value<string?>()));
+        }
+        else
+        {
+            return token.SelectToken(path)?.Value<string?>();
+        }
+    }
+
+    public static decimal AggregateElements(JToken? token, string path, string aggStr)
+    {
+        var aggregation = Enum.Parse<Aggregation>(aggStr, true);
+
+        if (token == null) { return 0; }
+        if (token is JArray)
+        {
+            switch (aggregation)
+            {
+                case Aggregation.Sum:
+                    return (token as JArray)!.Sum(item => item.SelectToken(path)?.Value<decimal>() ?? 0);
+                case Aggregation.Avg:
+                    return (token as JArray)!.Average(item => item.SelectToken(path)?.Value<decimal>() ?? 0);
+                case Aggregation.Max:
+                    return (token as JArray)!.Max(item => item.SelectToken(path)?.Value<decimal>() ?? 0);
+                case Aggregation.Min:
+                    return (token as JArray)!.Min(item => item.SelectToken(path)?.Value<decimal>() ?? 0);
+                case Aggregation.Count:
+                    return (token as JArray)!.Count();
+                default:
+                    throw new Exception($"Unexpected aggregation: {aggregation}");
+            }
+        }
+        else
+        {
+            switch (aggregation)
+            {
+                case Aggregation.Sum:
+                case Aggregation.Avg:
+                case Aggregation.Max:
+                case Aggregation.Min:
+                    return token.SelectToken(path)?.Value<decimal>() ?? 0;
+                case Aggregation.Count:
+                    return token.SelectToken(path)?.Value<decimal>() == null ? 0 : 1;
+                default:
+                    throw new Exception($"Unexpected aggregation: {aggregation}");
+            }
+        }
+    }
 }

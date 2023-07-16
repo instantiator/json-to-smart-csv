@@ -1,6 +1,6 @@
 [
-    { "id": "00001", "name": "artichoke", "stats": { "deliciousness": 0.2 } },
-    { "id": "00002", "name": "bell pepper", "stats": { "deliciousness": 0.4 } },
-    { "id": "00003", "name": "carrot", "stats": { "deliciousness": 0.6 } },
-    { "id": "00004", "name": "dill pickle", "stats": { "deliciousness": 0.8 } }
+    { "id": "00001", "name": "artichoke", "stats": { "deliciousness": 0.2 }, "friends": [ "fridge", "freezer" ] },
+    { "id": "00002", "name": "bell pepper", "stats": { "deliciousness": 0.4 }, "friends": [ "oven", "grill", "microwave" ] },
+    { "id": "00003", "name": "carrot", "stats": { "deliciousness": 0.6 }, "friends": [ "potato sack", "chopping board" ] },
+    { "id": "00004", "name": "dill pickle", "stats": { "deliciousness": 0.8 }, "friends": [ ] }
 ]

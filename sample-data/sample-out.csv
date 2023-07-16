@@ -1,5 +1,23 @@
-id,name,deliciousness
-00001,artichoke,0.2
-00002,bell pepper,0.4
-00003,carrot,0.6
-00004,dill pickle,0.8
+id,name,stats-json,deliciousness,all-friends,friends-json,friends-count
+00001,artichoke,"{
+  ""deliciousness"": 0.2
+}",0.2,"fridge, freezer","[
+  ""fridge"",
+  ""freezer""
+]",2
+00002,bell pepper,"{
+  ""deliciousness"": 0.4
+}",0.4,"oven, grill, microwave","[
+  ""oven"",
+  ""grill"",
+  ""microwave""
+]",3
+00003,carrot,"{
+  ""deliciousness"": 0.6
+}",0.6,"potato sack, chopping board","[
+  ""potato sack"",
+  ""chopping board""
+]",2
+00004,dill pickle,"{
+  ""deliciousness"": 0.8
+}",0.8,,[],0

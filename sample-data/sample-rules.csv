@@ -1,4 +1,8 @@
-TargetColumn,SourcePath,Interpretation,InterpretationRule
-"id","$.id","AsString",
-"name","$.name","AsString",
-"deliciousness","$.stats.deliciousness","AsDecimal",
+TargetColumn,SourcePath,Interpretation,InterpretationArg1,InterpretationArg2
+"id","$.id","AsString",,
+"name","$.name","AsString",,
+"stats-json","$.stats","AsJson",,
+"deliciousness","$.stats.deliciousness","AsDecimal",,
+"all-friends","$.friends","AsConcatenation","$",", "
+"friends-json","$.friends","AsJson",,
+"friends-count","$.friends","AsCount",,

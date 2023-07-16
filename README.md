@@ -4,7 +4,8 @@
 Converts an input JSON file to CSV, using smart rules to select values for columns.
 
 Options:
-  -r <file>       --rules <file>      Rules CSV file
+  -r <path>       --root <path>       Root element
+  -c <file>       --columns <file>    Rules CSV file
   -s <file>       --source <file>     Input JSON file
   -t <file>       --target <file>     Target CSV file
   -m <mode>       --mode <mode>       Mode (default: Create)
@@ -31,4 +32,7 @@ Source interpretations:
 
 See `test-sample.sh` for an example.
 
+## Roadmap
 
+- [ ] Add `--root` option to specify the root source (object or array)
+- [ ] Additional interpretation rules

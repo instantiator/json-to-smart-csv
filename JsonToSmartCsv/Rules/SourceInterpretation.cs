@@ -6,7 +6,8 @@ public enum SourceInterpretation
     AsDecimal,
     AsInteger,
     AsBoolean,
-    AsObjectAsJson,
-    AsListAsJson,
-    AsListCount
+    AsJson,
+    AsCount,
+    AsConcatenation,
+    AsAggregate,
 }
