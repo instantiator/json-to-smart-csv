@@ -14,11 +14,11 @@ Usage: json-to-smart-csv.sh [options]
 Converts an input JSON file to CSV, using some (fairly) smart rules to select values for columns.
 
 Options:
-  -c <file>       --columns <file>    Rules CSV file     (required)
-  -s <file>       --source <file>     Input JSON file    (required)
-  -t <file>       --target <file>     Target CSV file    (required)
-  -m <mode>       --mode <mode>       Mode               (default: $MODE)
-  -r <path>       --root <path>       Root path          (default: $ROOT)
+  -c <file>       --columns <file>    Column definitions CSV file (required)
+  -s <file>       --source <file>     Input data JSON file        (required)
+  -t <file>       --target <file>     Target CSV file             (required)
+  -m <mode>       --mode <mode>       Mode                        (default: $MODE)
+  -r <path>       --root <path>       Root path                   (default: $ROOT)
 
 Path:
   Provide a JSON path to the root note to process. The default is: $ROOT
@@ -29,7 +29,7 @@ Modes:
   Create = create a new target file, backup any existing file
   Append = append to the target file (if it exists)
 
-Provide the following columns in your rules CSV file:
+Provide the following columns in your column definitions CSV file:
   TargetColumn         = the name of the column in the target CSV file (string, eg. "id")
   SourcePath           = a relative path to a field in the current JSON object (string, eg. "$.id")
   SourceInterpretation = how to interpret the value of the field (see below)
