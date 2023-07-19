@@ -11,9 +11,12 @@
 
 ## Releases
 
-Releases are available for `win-x64`, `osx-x64`, and `linux-x64`. See:
+Release binaries are available for `win-x64`, `osx-x64`, and `linux-x64` systems. See:
 
-* [instantiator/json-to-smart-csv/releases](https://github.com/instantiator/json-to-smart-csv/releases)
+* Latest release: [instantiator/json-to-smart-csv/releases/latest](https://github.com/instantiator/json-to-smart-csv/releases/latest)
+* All releases: [instantiator/json-to-smart-csv/releases](https://github.com/instantiator/json-to-smart-csv/releases)
+
+Download the zip file from the release, and use the binary for your system.
 
 ## Usage
 
