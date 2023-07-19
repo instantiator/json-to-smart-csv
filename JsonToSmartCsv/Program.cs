@@ -1,4 +1,5 @@
-﻿using JsonToSmartCsv.Builder;
+﻿using CommandLine;
+using JsonToSmartCsv.Builder;
 using JsonToSmartCsv.Reader;
 using JsonToSmartCsv.Rules;
 using JsonToSmartCsv.Writer;
@@ -12,15 +13,75 @@ public enum ProcessingMode
     Create
 }
 
+public class Options
+{
+    [Option('c', "columns", Required = true, HelpText = "Column definitions CSV file.")]
+    public string? ColumnsFile { get; set; }
+
+    [Option('s', "source", Required = true, HelpText = "Source data JSON file.")]
+    public string? SourceFile { get; set; }
+
+    [Option('t', "target", Required = true, HelpText = "Target CSV file.")]
+    public string? TargetFile { get; set; }
+
+    [Option('m', "mode", Required = false, HelpText = "Write mode (Append or Create)", Default = ProcessingMode.Create)]
+    public ProcessingMode Mode { get; set; }
+
+    [Option('r', "root", Required = false, HelpText = "Root path", Default = "$")]
+    public string? Root { get; set; }
+}
+
 public class Program
 {
     public static void Main(string[] args)
     {
-        var colsFile_csv = args[0];
-        var sourceFile_json = args[1];
-        var root_path = args[2];
-        var targetFile_csv = args[3];
-        var modeStr = args[4];
+        CommandLine.Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(RunOptions)
+            .WithNotParsed(HandleParseError);
+    }
+
+    private static void HandleParseError(IEnumerable<Error> errs)
+    {
+        Console.WriteLine(@"
+Path:
+  Provide a JSON path to the root note to process. The default is: $ROOT
+  If this points to a single object, {}, the object will be processed to a single row.
+  If this points to an array, [], each object in the array will be processed to a row.
+
+Modes:
+  Create = create a new target file, backup any existing file
+  Append = append to the target file (if it exists)
+
+Provide the following columns in your column definitions CSV file:
+  TargetColumn         = the name of the column in the target CSV file (string, eg. ""id"")
+  SourcePath           = a relative path to a field in the current JSON object (string, eg. ""$.id"")
+  SourceInterpretation = how to interpret the value of the field (see below)
+  InterpretationArg1   = supplementary information about how to interpret the field (optional)
+  InterpretationArg2   = supplementary information about how to interpret the field (optional)
+
+Source interpretations:
+  AsString             = as a standard string
+  AsDecimal            = as a decimal number
+  AsInteger            = as an integer
+  AsBoolean            = as a boolean (true/false)
+  AsJson               = as a JSON string, representing the object or list (array)
+  AsCount              = as the number of items in the list (array) or 1 (object) or 0 (not present)
+  AsConcatenation      = as a concatenation of strings found inside the element (array) or a single string (object)
+    InterpretationArg1 = a a relative path inside each element to retrieve values
+    InterpretationArg2 = the separator to use between values
+  AsAggregation        = as an aggregate of sub-elements inside this object or array
+    InterpretationArg1 = a a relative path inside each element to retrieve values
+    InterpretationArg2 = the aggregation (Sum, Avg, Min, Max, Count)
+");
+    }
+
+    private static void RunOptions(Options options)
+    {
+        var colsFile_csv = options.ColumnsFile;
+        var sourceFile_json = options.SourceFile;
+        var root_path = options.Root;
+        var targetFile_csv = options.TargetFile;
+        var mode = options.Mode;
 
         if (string.IsNullOrWhiteSpace(colsFile_csv) || !File.Exists(colsFile_csv))
         {
@@ -37,14 +98,6 @@ public class Program
         if (string.IsNullOrWhiteSpace(targetFile_csv))
         {
             Console.WriteLine("Please provide a target file to create.");
-            return;
-        }
-
-        ProcessingMode mode;
-        var modeOk = Enum.TryParse<ProcessingMode>(modeStr, out mode);
-        if (!modeOk)
-        {
-            Console.WriteLine($"Please provide a valid processing mode. Choices are: {string.Join(", ", Enum.GetValues<ProcessingMode>())}");
             return;
         }
 
