@@ -2,11 +2,6 @@
 
 **A simple tool to convert JSON data into CSV records.** Uses a set of rules defining your CSV columns to construct CSV records from a source JSON file. Can append to an existing file or create a fresh file with headers.
 
-## Prerequisites
-
-* [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/download) - used to build and run the tool
-* [bash](https://www.gnu.org/software/bash/) - shell scripting language
-
 **Disclaimer:** This tool was developed on Mac OS, and I've done no testing on any other systems.
 
 ## Releases
@@ -79,3 +74,10 @@ Source interpretations:
 ## Example
 
 See `test-sample-osx-x64.sh` for an example.
+
+## Developer notes
+
+### Prerequisites
+
+* [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/download) - used to build and run the tool
+* [bash](https://www.gnu.org/software/bash/) - shell scripting language
