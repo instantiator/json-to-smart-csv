@@ -1,5 +1,6 @@
 using System.Globalization;
 using CsvHelper;
+using JsonToSmartCsv.Builder;
 using JsonToSmartCsv.Rules;
 using JsonToSmartCsv.Rules.Csv;
 
@@ -7,11 +8,13 @@ namespace JsonToSmartCsv.Writer;
 
 public class SmartCsvWriter
 {
-    public static void Write(string path, IEnumerable<IEnumerable<object?>> records, CsvRulesSet rules, ProcessingMode mode)
+    public static void Write(string path, DataTable table, ProcessingMode mode)
     {
         var targetExists = File.Exists(path);
         var append = mode == ProcessingMode.Append;
         var createHeader = !append || !targetExists;
+
+        var headers = table.Headers;
 
         using (var writer = new StreamWriter(path, append))
         using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -19,25 +22,22 @@ public class SmartCsvWriter
             // add header
             if (createHeader)
             {
-                foreach (var col in rules.ColumnRules)
+                foreach (var col in headers)
                 {
-                    csv.WriteField(col.TargetColumn);
+                    csv.WriteField(col);
                 }
                 csv.NextRecord();
             }
 
             // add records
-            foreach (var record in records)
+            foreach (var record in table.Data.Where(r => r != null))
             {
-                if (record != null) {
-                    foreach (var field in record)
-                    {
-                        csv.WriteField(field);
-                    }
-                    csv.NextRecord();
+                foreach (var col in headers)
+                {
+                    csv.WriteField(record.ContainsKey(col) ? record[col] : null);
                 }
+                csv.NextRecord();
             }
-
             csv.Flush();
         }    
     }

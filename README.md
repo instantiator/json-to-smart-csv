@@ -1,8 +1,15 @@
 # json-to-smart-csv
 
-**A simple tool to convert JSON data into CSV records.** Uses a set of rules defining your CSV columns to construct CSV records from a source JSON file. Can append to an existing file or create a fresh file with headers.
+**A simple tool to convert JSON data into CSV records.** This tool uses a set of rules to construct CSV records from a source JSON file. It can append to an existing CSV file or create a fresh file with headers.
 
-**Disclaimer:** This tool was developed on Mac OS, and I've done no testing on any other systems.
+**Disclaimer:** JsonToSmartCsv was developed on Mac OS, and I've done no testing on any other systems. Binaries for Windows and Linux ought to work. Please let me know if you encounter issues.
+
+## Version history
+
+| Version | Notes |
+|-|-|
+| `0.1` | Initial release. Simple rules defined in a CSV file direct the tool to craft CSV from JSON input. |
+| `0.2` | Switched to defining the column rules as JSON, allowing for more complex nested rules to match more complex input data. |
 
 ## Releases
 
@@ -31,49 +38,91 @@ JsonToSmartCsv -c <column-csv-file> -s <source-json-file> -t <target-csv-file> [
   --version        Display version information.
 ```
 
-```
-Root path:
-  Provide a JSON path to the root note to process. The default is: $
-  If this points to a single object, {}, the object will be processed to a single row.
-  If this points to an array, [], each object in the array will be processed to a row.
+### Modes
+
+1. `Create` = create a new target file, backup any existing file
+2. `Append` = append to the target file (if it exists)
+
+### Column configuration
+
+Provide column configuration as a JSON file:
+
+```jsonc
+{
+    "root": "<string>", // topmost object to process, default: "$"
+    "rules": // array of rules defining columns
+    [
+        {
+            "path": "<string>" // relative path to the field in the current object
+            "target": "<string>" // name of the column in the target CSV file
+            "interpretation": "<string>" // how to interpret the value of the field (see below)
+            "children": [] // optional array of rules to apply to nested objects and lists
+        }
+    ]
+}
 ```
 
-```
-Modes:
-  Create = create a new target file, backup any existing file
-  Append = append to the target file (if it exists)
+#### Interpretations
+
+* `AsString` - interpret this value as a string
+* `AsNumber` - interpret this value as an integer or decimal number
+* `AsJson` - convert this object or list to a JSON string
+* `IterateListItems` - apply child rules to the items in this list
+* `IteratePropertiesAsList` - apply child rules to the object properties, as if a list
+* `WithPropertiesAsColumns` - Not yet implemented, a shortcut to transform an object to columns
+
+## Data types
+
+The root item of a JSON document is either an object or a list.
+
+1. If an object, you can start to apply rules with `$.property` paths.
+2. If a list, you'll want to apply an `IterateListItems` rule
+
+For example, you have a list, that looks like this:
+
+```json
+[
+    { "name": "John" },
+    { "name": "Jane" }
+]
 ```
 
-### Column definitions
+A simple rule set to extract the names from this list:
 
-```
-Provide the following columns in your column definitions CSV file:
-  TargetColumn         = the name of the column in the target CSV file (string, eg. "id")
-  SourcePath           = a relative path to a field in the current JSON object (string, eg. "$.id")
-  SourceInterpretation = how to interpret the value of the field (see below)
-  InterpretationArg1   = supplementary information about how to interpret the field (optional)
-  InterpretationArg2   = supplementary information about how to interpret the field (optional)
-```
-
-```
-Source interpretations:
-  AsString             = as a standard string
-  AsDecimal            = as a decimal number
-  AsInteger            = as an integer
-  AsBoolean            = as a boolean (true/false)
-  AsJson               = as a JSON string, representing the object or list (array)
-  AsCount              = as the number of items in the list (array) or 1 (object) or 0 (not present)
-  AsConcatenation      = as a concatenation of strings found inside the element (array) or a single string (object)
-    InterpretationArg1 = a a relative path inside each element to retrieve values
-    InterpretationArg2 = the separator to use between values
-  AsAggregation        = as an aggregate of sub-elements inside this object or array
-    InterpretationArg1 = a a relative path inside each element to retrieve values
-    InterpretationArg2 = the aggregation (Sum, Avg, Min, Max, Count)
+```jsonc
+{
+    "root": "$",
+    "rules": [
+        {
+            "path": "$",
+            "target": "list", // target not actually used
+            "interpretation": "IterateListItems",
+            "children":
+            [
+                {
+                    "path": "$.name",
+                    "target": "name",
+                    "interpretation": "AsString"
+                }
+            ]
+        }
+    ]
+}
 ```
 
 ## Example
 
-See `test-sample-osx-x64.sh` for an example.
+See `test-sample-osx-x64.sh` for an example. This script invokes a published copy of the tool (found at `release/osx-x64/JsonToSmartCsv`).
+
+If you need to create this, run the `publish.sh` script, or download a copy for your system from the [latest release](https://github.com/instantiator/json-to-smart-csv/releases/latest).
+
+It invokes `JsonToSmartCsv` with the following files:
+
+* `sample-data/sample-list.json` - some sample data
+* `sample-data/sample-rules.json` - rules to interpret them
+* `sample-data/sample-out.csv` - generated CSV output
+
+Take a look at the sample data, and sample rules to see how they interact to generate the output CSV.
 
 ## Developer notes
 
@@ -81,3 +130,19 @@ See `test-sample-osx-x64.sh` for an example.
 
 * [.NET 7.0 SDK](https://dotnet.microsoft.com/en-us/download) - used to build and run the tool
 * [bash](https://www.gnu.org/software/bash/) - shell scripting language
+
+### Build
+
+Either build the solution through Visual Studio, or use the `build-all.sh` script.
+
+### Test
+
+Launch the unit tests with the `run-unit-tests.sh` script, or through Visual Studio.
+
+### Publish
+
+Publish with the `publish.sh` script - this creates binaries at:
+
+* `release/win-x64`
+* `release/osx-x64`
+* `release/linux-x64`

@@ -1,23 +1,49 @@
-id,name,stats-json,deliciousness,all-friends,friends-json,friends-count
+id,name,stats-json,deliciousness,friends-json,kitchen-friend
 00001,artichoke,"{
   ""deliciousness"": 0.2
-}",0.2,"fridge, freezer","[
+}",0.2,"[
   ""fridge"",
   ""freezer""
-]",2
+]",fridge
+00001,artichoke,"{
+  ""deliciousness"": 0.2
+}",0.2,"[
+  ""fridge"",
+  ""freezer""
+]",freezer
 00002,bell pepper,"{
   ""deliciousness"": 0.4
-}",0.4,"oven, grill, microwave","[
+}",0.4,"[
   ""oven"",
   ""grill"",
   ""microwave""
-]",3
+]",oven
+00002,bell pepper,"{
+  ""deliciousness"": 0.4
+}",0.4,"[
+  ""oven"",
+  ""grill"",
+  ""microwave""
+]",grill
+00002,bell pepper,"{
+  ""deliciousness"": 0.4
+}",0.4,"[
+  ""oven"",
+  ""grill"",
+  ""microwave""
+]",microwave
 00003,carrot,"{
   ""deliciousness"": 0.6
-}",0.6,"potato sack, chopping board","[
+}",0.6,"[
   ""potato sack"",
   ""chopping board""
-]",2
+]",potato sack
+00003,carrot,"{
+  ""deliciousness"": 0.6
+}",0.6,"[
+  ""potato sack"",
+  ""chopping board""
+]",chopping board
 00004,dill pickle,"{
   ""deliciousness"": 0.8
-}",0.8,,[],0
+}",0.8,[],

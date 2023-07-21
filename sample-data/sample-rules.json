@@ -1,0 +1,52 @@
+{
+    "root": "$",
+    "rules":
+    [
+        {
+            "path": "$",
+            "target": "",
+            "interpretation": "IterateListItems",
+            "children": 
+            [
+                {
+                    "path": "$.id",
+                    "target": "id",
+                    "interpretation": "AsString"
+                },
+                {
+                    "path": "$.name",
+                    "target": "name",
+                    "interpretation": "AsString"
+                },
+                {
+                    "path": "$.stats",
+                    "target": "stats-json",
+                    "interpretation": "AsJson"
+                },
+                {
+                    "path": "$.stats.deliciousness",
+                    "target": "deliciousness",
+                    "interpretation": "AsNumber"
+                },
+                {
+                    "path": "$.friends",
+                    "target": "friends-json",
+                    "interpretation": "AsJson"
+                },
+                {
+                    "path": "$.friends",
+                    "target": "friend",
+                    "interpretation": "IterateListItems",
+                    "children":
+                    [
+                        {
+                            "path": "$",
+                            "target": "kitchen-friend",
+                            "interpretation": "AsString"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]    
+}

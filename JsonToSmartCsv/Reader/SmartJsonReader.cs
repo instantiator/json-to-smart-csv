@@ -4,11 +4,10 @@ namespace JsonToSmartCsv.Reader
 {
     public class SmartJsonReader
     {
-        public static JToken Read(string filePath, string jsonPath)
+        public static JToken Read(string filePath)
         {
             var json = File.ReadAllText(filePath);
-            var doc = JToken.Parse(json);
-            return doc.SelectToken(jsonPath)!;
+            return JToken.Parse(json);
         }
     }
 }
