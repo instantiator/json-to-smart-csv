@@ -1,12 +1,13 @@
 using System.Globalization;
 using CsvHelper;
 using JsonToSmartCsv.Rules;
+using JsonToSmartCsv.Rules.Csv;
 
 namespace JsonToSmartCsv.Writer;
 
 public class SmartCsvWriter
 {
-    public static void Write(string path, IEnumerable<IEnumerable<object?>> records, RulesSet rules, ProcessingMode mode)
+    public static void Write(string path, IEnumerable<IEnumerable<object?>> records, CsvRulesSet rules, ProcessingMode mode)
     {
         var targetExists = File.Exists(path);
         var append = mode == ProcessingMode.Append;

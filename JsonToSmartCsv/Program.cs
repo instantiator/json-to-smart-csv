@@ -1,7 +1,9 @@
 ﻿using CommandLine;
 using JsonToSmartCsv.Builder;
+using JsonToSmartCsv.Builder.Json;
 using JsonToSmartCsv.Reader;
 using JsonToSmartCsv.Rules;
+using JsonToSmartCsv.Rules.Json;
 using JsonToSmartCsv.Writer;
 using Newtonsoft.Json.Linq;
 
@@ -77,15 +79,15 @@ Source interpretations:
 
     private static void RunOptions(Options options)
     {
-        var colsFile_csv = options.ColumnsFile;
+        var colsFile_json = options.ColumnsFile;
         var sourceFile_json = options.SourceFile;
         var root_path = options.Root;
         var targetFile_csv = options.TargetFile;
         var mode = options.Mode;
 
-        if (string.IsNullOrWhiteSpace(colsFile_csv) || !File.Exists(colsFile_csv))
+        if (string.IsNullOrWhiteSpace(colsFile_json) || !File.Exists(colsFile_json))
         {
-            Console.WriteLine("Please provide a column specification config file.");
+            Console.WriteLine("Please provide a column specification json config file.");
             return;
         }
 
@@ -103,26 +105,26 @@ Source interpretations:
 
         var root = root_path ?? "$";
 
-        Console.WriteLine($"Reading rules: {colsFile_csv}");
-        var rules = RulesReader.FromFile(colsFile_csv);
+        Console.WriteLine($"Reading rules: {colsFile_json}");
+        var rules = JsonRulesReader.FromFile(colsFile_json);
 
         Console.WriteLine($"Reading source json: {sourceFile_json}");
         var source = SmartJsonReader.Read(sourceFile_json, root);
 
-        Console.WriteLine($"Preparing records...");
-        var records = RecordBuilder.BuildRecords(source, rules);
-        Console.WriteLine($"Created {records.Count()} records.");
+        Console.WriteLine($"Preparing transient records...");
+        var records = new JsonRuleRecordBuilder(rules).BuildRecords(source);
+        Console.WriteLine($"Created {records.Rows} records.");
 
-        if (mode == ProcessingMode.Create && File.Exists(targetFile_csv))
-        {
-            var backup = $"{targetFile_csv}.backup";
-            Console.WriteLine($"Backing up existing target to: {backup}");
-            if (File.Exists(backup)) { File.Delete(backup); }
-            File.Move(targetFile_csv, backup);
-        }
+        // if (mode == ProcessingMode.Create && File.Exists(targetFile_csv))
+        // {
+        //     var backup = $"{targetFile_csv}.backup";
+        //     Console.WriteLine($"Backing up existing target to: {backup}");
+        //     if (File.Exists(backup)) { File.Delete(backup); }
+        //     File.Move(targetFile_csv, backup);
+        // }
 
-        Console.WriteLine($"Writing {records.Count()} records to target: {targetFile_csv}");
-        SmartCsvWriter.Write(targetFile_csv, records, rules, mode);
+        // Console.WriteLine($"Writing {records.Rows} records to target: {targetFile_csv}");
+        // SmartCsvWriter.Write(targetFile_csv, records, rules, mode);
     }
 }
 

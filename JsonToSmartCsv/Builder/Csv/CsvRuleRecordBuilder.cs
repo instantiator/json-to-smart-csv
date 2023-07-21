@@ -1,19 +1,19 @@
-using JsonToSmartCsv.Rules;
+using JsonToSmartCsv.Rules.Csv;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
-namespace JsonToSmartCsv.Builder;
+namespace JsonToSmartCsv.Builder.Csv;
 
 public enum Aggregation { Sum, Avg, Max, Min, Count }
 
-public class RecordBuilder
+public class CsvRuleRecordBuilder
 {
-    public static IEnumerable<string> GetHeaders(RulesSet rules)
+    public static IEnumerable<string> GetHeaders(CsvRulesSet rules)
     {
         return rules.ColumnRules.Select(col => col.TargetColumn!);
     }
 
-    public static IEnumerable<IEnumerable<object?>> BuildRecords(JToken source, RulesSet rules)
+    public static IEnumerable<IEnumerable<object?>> BuildRecords(JToken source, CsvRulesSet rules)
     {
         if (source is JArray)
         {
@@ -29,7 +29,7 @@ public class RecordBuilder
         }
     }
 
-    private static IEnumerable<object?> BuildRecord(JToken root, RulesSet rules)
+    private static IEnumerable<object?> BuildRecord(JToken root, CsvRulesSet rules)
     {
         var record = new List<object?>();
         foreach (var col in rules.ColumnRules)
@@ -39,28 +39,28 @@ public class RecordBuilder
 
             switch (col.Interpretation)
             {
-                case SourceInterpretation.AsString:
+                case CsvSourceInterpretation.AsString:
                     record.Add(token?.Value<string?>());
                     break;
-                case SourceInterpretation.AsDecimal:
+                case CsvSourceInterpretation.AsDecimal:
                     record.Add(token?.Value<decimal>());
                     break;
-                case SourceInterpretation.AsInteger:
+                case CsvSourceInterpretation.AsInteger:
                     record.Add(token?.Value<int>());
                     break;
-                case SourceInterpretation.AsBoolean:
+                case CsvSourceInterpretation.AsBoolean:
                     record.Add(token?.Value<bool>());
                     break;
-                case SourceInterpretation.AsJson:
+                case CsvSourceInterpretation.AsJson:
                     record.Add(token?.ToString(Newtonsoft.Json.Formatting.Indented));
                     break;
-                case SourceInterpretation.AsCount:
+                case CsvSourceInterpretation.AsCount:
                     record.Add(CountToken(token));
                     break;
-                case SourceInterpretation.AsConcatenation:
+                case CsvSourceInterpretation.AsConcatenation:
                     record.Add(ConcatenateElements(token, col.InterpretationArg1!, col.InterpretationArg2!));
                     break;
-                case SourceInterpretation.AsAggregate:
+                case CsvSourceInterpretation.AsAggregate:
                     record.Add(AggregateElements(token, col.InterpretationArg1!, col.InterpretationArg2!));
                     break;
                 default:

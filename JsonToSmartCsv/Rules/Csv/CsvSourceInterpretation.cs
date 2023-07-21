@@ -1,6 +1,6 @@
-namespace JsonToSmartCsv.Rules;
+namespace JsonToSmartCsv.Rules.Csv;
 
-public enum SourceInterpretation
+public enum CsvSourceInterpretation
 {
     AsString,
     AsDecimal,
