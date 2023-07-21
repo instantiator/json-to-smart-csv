@@ -146,3 +146,11 @@ Publish with the `publish.sh` script - this creates binaries at:
 * `release/win-x64`
 * `release/osx-x64`
 * `release/linux-x64`
+
+## TODOs
+
+Additional features I think would be fun and handy:
+
+- [ ] Add support for `WithPropertiesAsColumns` - a handy shortcut for simple objects
+- [ ] Add aggregate interpretations (count, min, max, avg)
+- [ ] Add nested aggregate interpretations (sum across lists, etc.)
