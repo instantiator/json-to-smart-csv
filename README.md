@@ -53,9 +53,9 @@ Provide column configuration as a JSON file:
     "rules": // array of rules defining columns
     [
         {
-            "path": "<string>" // relative path to the field in the current object
-            "target": "<string>" // name of the column in the target CSV file
-            "interpretation": "<string>" // how to interpret the value of the field (see below)
+            "path": "<string>", // relative path to the field in the current object
+            "target": "<string>", // name of the column in the target CSV file
+            "interpretation": "<string>", // how to interpret the value of the field (see below)
             "children": [] // optional array of rules to apply to nested objects and lists
         }
     ]
