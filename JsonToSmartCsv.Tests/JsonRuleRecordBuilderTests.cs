@@ -97,14 +97,14 @@ public class JsonRulesRecordBuilderTests
             Assert.Equal("John", table.Data.ElementAt(i)["name"]);
             Assert.Equal("Basic clown", table.Data.ElementAt(i)["description"]);
             Assert.Equal(colours[i], table.Data.ElementAt(i)["colour"]);
-            Assert.Equal(0m, table.Data.ElementAt(i)["clown-index"]);
+            Assert.Equal(0, table.Data.ElementAt(i)["clown-index"]);
         }
         for (int i = 3; i < 6; i++)
         {
             Assert.Equal("Lisa", table.Data.ElementAt(i)["name"]);
             Assert.Equal("Advanced clown", table.Data.ElementAt(i)["description"]);
             Assert.Equal(colours[i], table.Data.ElementAt(i)["colour"]);
-            Assert.Equal(1m, table.Data.ElementAt(i)["clown-index"]);
+            Assert.Equal(1, table.Data.ElementAt(i)["clown-index"]);
         }
     }
 

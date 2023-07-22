@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Data;
+using System.Text;
 using JsonToSmartCsv.Rules.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -42,125 +44,51 @@ public class JsonRuleRecordBuilder
     private DataTable ApplyRule(DataTable table, JToken token, JsonRule rule)
     {
         var newTable = table.Duplicate();
+        var selectedToken = token?.SelectToken(rule.path!);
         switch (rule.interpretation)
         {
             case JsonInterpretation.AsString:
-                if (newTable.Rows == 0) { newTable.AddRow(DataRow.Empty); }
-                foreach (var row in newTable.Data)
-                {
-                    if (!row.ContainsKey(rule.target!)) { row.Add(rule.target!, null); }
-                    row[rule.target!] = token?.SelectToken(rule.path!)?.Value<string?>();
-                }
-                return newTable;
+                return ApplySingleValue(newTable, rule.target!, selectedToken?.Value<string?>());
 
             case JsonInterpretation.AsNumber:
-                if (newTable.Rows == 0) { newTable.AddRow(DataRow.Empty); }
-                foreach (var row in newTable.Data)
-                {
-                    if (!row.ContainsKey(rule.target!)) { row.Add(rule.target!, null); }
-                    row[rule.target!] = token?.SelectToken(rule.path!)?.Value<decimal?>();
-                }
-                return newTable;
+                return ApplySingleValue(newTable, rule.target!, selectedToken?.Value<decimal?>());
+
+            case JsonInterpretation.AsBoolean:
+                var value = InterpretBool(selectedToken);
+                return ApplySingleValue(newTable, rule.target!, value);
 
             case JsonInterpretation.AsJson:
-                if (newTable.Rows == 0) { newTable.AddRow(DataRow.Empty); }
-                foreach (var row in newTable.Data)
-                {
-                    if (!row.ContainsKey(rule.target!)) { row.Add(rule.target!, null); }
-                    row[rule.target!] = token?.SelectToken(rule.path!)?.ToString(Formatting.Indented);
-                }
-                return newTable;
+                var json = selectedToken?.ToString(Formatting.Indented);
+                return ApplySingleValue(newTable, rule.target!, json);
 
             case JsonInterpretation.IterateListItems:
-                var asArray = token?.SelectToken(rule.path!) as JArray;
-                if (asArray == null)
-                { 
-                    throw new Exception($"Token at {rule.path} is not an array, or not found."); 
-                }
-                else
-                {
-                    // lots of children - they should all be concatenated together
-                    var itemTables = new List<DataTable>();
-                    for (int index = 0; index < asArray.Count(); index++)
-                    {
-                        var item = asArray.ElementAt(index);
-                        var itemTable = new DataTable();
-
-                        foreach (var indexedChildRule in rule.children!)
-                        {
-                            var specificChildRule = new JsonRule()
-                            {
-                                path = indexedChildRule.path,
-                                target = indexedChildRule.target!.Replace("${id}", index.ToString()),
-                                interpretation = indexedChildRule.interpretation,
-                                children = indexedChildRule.children
-                            };
-                            if (specificChildRule.path == "${id}" && specificChildRule.interpretation == JsonInterpretation.AsNumber)
-                            {
-                                // special case - use ${id} with AsString to get the property key
-                                specificChildRule.path = "$";
-                                var itemKey = new JValue(index);
-                                itemTable = ApplyRule(itemTable, itemKey, specificChildRule);
-                            }
-                            else
-                            {
-                                // regular case
-                                itemTable = ApplyRule(itemTable, item, specificChildRule);
-                            }
-                        }
-                        itemTables.Add(itemTable);
-                    }
-                    var itemsConcatTable = DataTable.Concat(itemTables.ToArray());
-                    return newTable.Rows == 0
-                        ? itemsConcatTable
-                        : itemsConcatTable.Rows == 0
-                            ? newTable
-                            : newTable.CombinedWith(itemsConcatTable);
-                }
+                var items = GetListItems(selectedToken, rule.path!);
+                return BuildAndConcatAndApplyItemTables(newTable, items, rule);
 
             case JsonInterpretation.IteratePropertiesAsList:
-                var asObject = token?.SelectToken(rule.path!) as JObject;
-                if (asObject == null)
-                {
-                    throw new Exception($"Token at {rule.path} is not an object, or not found.");
-                }
-                else
-                {
-                    var propertyTables = new List<DataTable>();
-                    foreach (var property in asObject.Properties())
-                    {
-                        var propertyTable = new DataTable();
-                        foreach (var childRule in rule.children!)
-                        {
-                            var specificChildRule = new JsonRule()
-                            {
-                                path = childRule.path,
-                                target = childRule.target!.Replace("${id}", property.Name),
-                                interpretation = childRule.interpretation,
-                                children = childRule.children
-                            };
-                            if (specificChildRule.path == "${id}" && specificChildRule.interpretation == JsonInterpretation.AsString)
-                            {
-                                // special case - use ${id} with AsString to get the property key
-                                specificChildRule.path = "$";
-                                var propertyKey = new JValue(property.Name);
-                                propertyTable = ApplyRule(propertyTable, propertyKey, specificChildRule);
-                            }
-                            else
-                            {
-                                // regular case
-                                propertyTable = ApplyRule(propertyTable, property.Value, specificChildRule);
-                            }
-                        }
-                        propertyTables.Add(propertyTable);
-                    }
-                    var propertiesConcatTable = DataTable.Concat(propertyTables.ToArray());
-                    return newTable.Rows == 0
-                        ? propertiesConcatTable
-                        : propertiesConcatTable.Rows == 0
-                            ? newTable
-                            : newTable.CombinedWith(propertiesConcatTable);
-                }
+                var props = GetObjectProperties(selectedToken, rule.path!);
+                return BuildAndConcatAndApplyItemTables(newTable, props, rule);
+
+            //case JsonInterpretation.AsAggregateSum:
+            //    var sumTable = BuildAggregationTable(selectedToken, rule.children);
+            //    var sumItemRows = GetNumericItemRows(sumTable);
+            //    return ApplySingleValue(newTable, rule.target!, sumItems.Sum());
+
+            //case JsonInterpretation.AsAggregateMax:
+            //    var maxTable = BuildAggregationTable(selectedToken, rule.children);
+            //    var maxItemRows = GetNumericItemRows(maxTable);
+            //    return ApplySingleValue(newTable, rule.target!, maxItems.Max());
+
+            //case JsonInterpretation.AsAggregateMin:
+            //    var minTable = BuildAggregationTable(selectedToken, rule.children);
+            //    var minItemsRows = GetNumericItemRows(minTable);
+            //    return ApplySingleValue(newTable, rule.target!, minItems.Min());
+
+            //case JsonInterpretation.AsAggregateAvg:
+            //    var avgTable = BuildAggregationTable(selectedToken, rule.children);
+            //    var avgItemRows = GetNumericItemRows(avgTable);
+            //    var avgItems = avgItemRows.SelectMany(i => i);
+            //    return ApplySingleValue(newTable, rule.target!, avgItems.Average());
 
             case JsonInterpretation.WithPropertiesAsColumns:
                 throw new NotImplementedException("This is shorthand - not implemented yet");
@@ -169,6 +97,163 @@ public class JsonRuleRecordBuilder
                 throw new NotImplementedException($"Unknown interpretation: {rule.interpretation}");
         }
     }    
+
+    private DataTree BuildDataTree(JToken? token, IEnumerable<JsonRule>? rules)
+    {
+        var tree = new DataTree();
+        if (token == null) { return tree; }
+        foreach (var rule in rules ?? new JsonRule[0])
+        {
+            var selectedToken = token?.SelectToken(rule.path!);
+            switch (rule.interpretation)
+            {
+                case JsonInterpretation.AsString:
+                    tree.Items.Add(rule.target!, selectedToken?.Value<string?>());
+                    break;
+                case JsonInterpretation.AsNumber:
+                    tree.Items.Add(rule.target!, selectedToken?.Value<decimal?>());
+                    break;
+                case JsonInterpretation.AsBoolean:
+                    tree.Items.Add(rule.target!, InterpretBool(selectedToken));
+                    break;
+                case JsonInterpretation.AsJson:
+                    tree.Items.Add(rule.target!, selectedToken?.ToString(Formatting.Indented));
+                    break;
+                case JsonInterpretation.IterateListItems:
+                    var asArray = selectedToken as JArray;
+                    foreach (var item in asArray ?? new JArray())
+                        tree.Items.Add(rule.target!, BuildDataTree(item, rule.children));
+                    break;
+                case JsonInterpretation.IteratePropertiesAsList:
+                    var asObject = selectedToken as JObject;
+                    foreach (var prop in asObject?.Properties() ?? new JProperty[0])
+                        tree.Items.Add(rule.target!, BuildDataTree(prop.Value, rule.children));
+                    break;
+                case JsonInterpretation.AsAggregateAvg:
+                    var avgTree = BuildDataTree(selectedToken, rule.children);
+                    var avgNumbers = GetNumbers(avgTree);
+                    tree.Items.Add(rule.target!, avgNumbers.Average());
+                    break;
+                case JsonInterpretation.AsAggregateSum:
+                    var sumTree = BuildDataTree(selectedToken, rule.children);
+                    var sumNumbers = GetNumbers(sumTree);
+                    tree.Items.Add(rule.target!, sumNumbers.Sum());
+                    break;
+                case JsonInterpretation.AsAggregateMax:
+                    var maxTree = BuildDataTree(selectedToken, rule.children);
+                    var maxNumbers = GetNumbers(maxTree);
+                    tree.Items.Add(rule.target!, maxNumbers.Max());
+                    break;
+                case JsonInterpretation.AsAggregateMin:
+                    var minTree = BuildDataTree(selectedToken, rule.children);
+                    var minNumbers = GetNumbers(minTree);
+                    tree.Items.Add(rule.target!, minNumbers.Min());
+                    break;
+                case JsonInterpretation.AsAggregateCount:
+                    var countTree = BuildDataTree(selectedToken, rule.children);
+                    var nonNull = GetNonNulls(countTree);
+                    tree.Items.Add(rule.target!, nonNull.Count());
+                    break;
+                default:
+                    throw new NotImplementedException($"{rule.interpretation}");
+            }
+        }
+        return tree;
+    }
+
+    private IEnumerable<decimal> GetNumbers(DataTree tree)
+    {
+        var numbers = tree.Items
+            .Where(i => i.Value != null && (i.Value is decimal || i.Value is int))
+            .Select(i => (decimal)((i.Value as decimal?) ?? (i.Value as int?)!))
+            .ToList();
+        numbers.AddRange(tree.Items
+            .Where(i => i.Value != null && i.Value is DataTree)
+            .SelectMany(subtree => GetNumbers((DataTree)subtree.Value!)));
+        return numbers;
+    }
+
+    private IEnumerable<object> GetNonNulls(DataTree tree)
+    {
+        var nonNull = tree.Items.Where(i => i.Value != null).Select(i => (object)i.Value!).ToList();
+        nonNull.AddRange(tree.Items
+            .Where(i => i.Value != null && i.Value is DataTree)
+            .SelectMany(subtree => GetNonNulls((DataTree)subtree.Value!)));
+        return nonNull;
+    }
+
+    private DataTable BuildAggregationTable(JToken? token, IEnumerable<JsonRule>? rules)
+    {
+        var aggTable = new DataTable();
+        if (token == null) { return aggTable; }
+        foreach (var rule in rules ?? new JsonRule[0])
+        {
+            aggTable = ApplyRule(aggTable, token, rule);
+        }
+        return aggTable;
+    }
+
+    private bool? InterpretBool(JToken? token)
+    {
+        if (token == null) { return null; }
+        var asBool = token?.Value<bool?>();
+        var asString = token?.Value<string?>();
+        var asInt = token?.Value<int?>();
+        var value = asBool;
+        if (value == null && !string.IsNullOrWhiteSpace(asString)) value = bool.Parse(asString);
+        if (value == null && asInt != null) value = asInt != 0; // non-zero = true
+        return value;
+    }
+
+    private DataTable BuildAndConcatAndApplyItemTables(DataTable newTable, IEnumerable<Tuple<object, JToken>> items, JsonRule rule)
+    {
+        var itemTables = new List<DataTable>();
+        foreach (var item in items)
+        {
+            var itemTable = new DataTable();
+            foreach (var childRule in rule.children ?? new JsonRule[0])
+            {
+                if (childRule.path == "${id}") // special case
+                    itemTable = ApplySingleValue(itemTable, childRule.target!, item.Item1);
+                else
+                    itemTable = ApplyRule(itemTable, item.Item2, childRule);
+            }
+            itemTables.Add(itemTable);
+        }
+        var itemsConcatTable = DataTable.Concat(itemTables.ToArray());
+        return newTable.Rows == 0
+            ? itemsConcatTable
+            : itemsConcatTable.Rows == 0
+                ? newTable
+                : newTable.CombinedWith(itemsConcatTable);
+    }
+
+    private IEnumerable<Tuple<object,JToken>> GetListItems(JToken? token, string path)
+    {
+        var asArray = token as JArray;
+        if (asArray == null) throw new Exception($"Token is not an array, or not found."); 
+        return asArray.Select((item, index) => new Tuple<object, JToken>(index, item));
+    }
+
+    private IEnumerable<Tuple<object,JToken>> GetObjectProperties(JToken? token, string path)
+    {
+        var asObject = token as JObject;
+        if (asObject == null) throw new Exception($"Token at {path} is not an object, or not found."); 
+        return asObject.Properties().Select((prop) => new Tuple<object, JToken>(prop.Name, prop.Value));
+    }
+
+
+    private DataTable ApplySingleValue(DataTable table, string column, object? value)
+    {
+        var newTable = table.Duplicate();
+        if (newTable.Rows == 0) { newTable.AddRow(DataRow.Empty); }
+        foreach (var row in newTable.Data)
+        {
+            if (!row.ContainsKey(column)) { row.Add(column, null); }
+            row[column] = value;
+        }
+        return newTable;
+    }
 
 
 }

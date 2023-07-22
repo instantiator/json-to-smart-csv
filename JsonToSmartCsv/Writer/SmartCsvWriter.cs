@@ -1,8 +1,6 @@
 using System.Globalization;
 using CsvHelper;
 using JsonToSmartCsv.Builder;
-using JsonToSmartCsv.Rules;
-using JsonToSmartCsv.Rules.Csv;
 
 namespace JsonToSmartCsv.Writer;
 

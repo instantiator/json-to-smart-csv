@@ -66,9 +66,17 @@ Interpretations:
 
 ""AsString""                - interpret this value as a string
 ""AsNumber""                - interpret this value as an integer or decimal number
+""AsBoolean""               - interpret this value as a boolean (true/false)
 ""AsJson""                  - convert this object or list to a JSON string
 ""IterateListItems""        - apply child rules to the items in this list
 ""IteratePropertiesAsList"" - apply child rules to the object properties, as if a list
+
+Coming soon:
+
+""AsAggregateSum""          - aggregate and sum all numeric values from child rules
+""AsAggregateMax""          - aggregate and find the max of numeric values from child rules
+""AsAggregateMin""          - aggregate and find the min of numeric values from child rules
+""AsAggregateAvg""          - aggregate and find the mean of numeric values from child rules
 ""WithPropertiesAsColumns"" - Not yet implemented, a shortcut to transform an object to columns
 
 Data types:

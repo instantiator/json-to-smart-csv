@@ -4,8 +4,14 @@ public enum JsonInterpretation
 {
     AsString,
     AsNumber,
+    AsBoolean,
     AsJson,
-    WithPropertiesAsColumns, // uses the target column as a prefix
+    AsAggregateSum,
+    AsAggregateMax,
+    AsAggregateMin,
+    AsAggregateAvg,
+    AsAggregateCount,
+    IterateListItems,
     IteratePropertiesAsList,
-    IterateListItems
+    WithPropertiesAsColumns, // uses the target column as a prefix
 }
