@@ -98,9 +98,39 @@ public class JsonRuleRecordBuilder
         }
     }    
 
-    private DataTree BuildDataTree(JToken? token, IEnumerable<JsonRule>? rules)
+    private DataTable TreeToTable(DataTree tree, string? target = null)
     {
-        var tree = new DataTree();
+        DataTable table = new DataTable();
+        foreach (var item in tree.Items.Where(i => i.Value != null))
+        {
+            if (item.Value is DataTree)
+            {
+                var joinTable = TreeToTable((DataTree)item.Value, item.Key);
+                table = DataTable.Combine(table, joinTable);
+            }
+            else
+            {
+                // special cases
+                // 1. ${target} refers to the target
+                // 2. ${index} refers to the index (where known)
+                var key = item.Key
+                    .Replace("${target}", target)
+                    .Replace("${index}", (item.Value as DataTree)?.Index?.ToString());
+                var value = item.Value is string
+                    ? ((string)item.Value)
+                        .Replace("${target}", target)
+                        .Replace("${index}", tree.Index?.ToString())
+                    : item.Value;
+                table = ApplySingleValue(table, item.Key, value);
+
+            }
+        }
+        return table;
+    }
+
+    private DataTree BuildDataTree(JToken? token, IEnumerable<JsonRule>? rules, object? index = null)
+    {
+        var tree = new DataTree() { Index = index };
         if (token == null) { return tree; }
         foreach (var rule in rules ?? new JsonRule[0])
         {
@@ -121,13 +151,13 @@ public class JsonRuleRecordBuilder
                     break;
                 case JsonInterpretation.IterateListItems:
                     var asArray = selectedToken as JArray;
-                    foreach (var item in asArray ?? new JArray())
-                        tree.Items.Add(rule.target!, BuildDataTree(item, rule.children));
+                    foreach (var item in asArray?.Select((item, index) => new Tuple<int,object?>(index, item)) ?? new Tuple<int, object?>[0])
+                        tree.Items.Add(rule.target!, BuildDataTree(item.Item1, rule.children, item.Item2));
                     break;
                 case JsonInterpretation.IteratePropertiesAsList:
                     var asObject = selectedToken as JObject;
                     foreach (var prop in asObject?.Properties() ?? new JProperty[0])
-                        tree.Items.Add(rule.target!, BuildDataTree(prop.Value, rule.children));
+                        tree.Items.Add(rule.target!, BuildDataTree(prop.Value, rule.children, prop.Name));
                     break;
                 case JsonInterpretation.AsAggregateAvg:
                     var avgTree = BuildDataTree(selectedToken, rule.children);
