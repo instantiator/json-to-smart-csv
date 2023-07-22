@@ -33,7 +33,6 @@ JsonToSmartCsv -c <column-csv-file> -s <source-json-file> -t <target-csv-file> [
   -s, --source     Required. Source data JSON file.
   -t, --target     Required. Target CSV file.
   -m, --mode       (Default: Create) Write mode (Append or Create)
-  -r, --root       (Default: $) Root path
   --help           Display this help screen.
   --version        Display version information.
 ```
