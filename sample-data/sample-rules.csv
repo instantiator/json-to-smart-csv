@@ -1,8 +1,0 @@
-TargetColumn,SourcePath,Interpretation,InterpretationArg1,InterpretationArg2
-"id","$.id","AsString",,
-"name","$.name","AsString",,
-"stats-json","$.stats","AsJson",,
-"deliciousness","$.stats.deliciousness","AsDecimal",,
-"all-friends","$.friends","AsConcatenation","$",", "
-"friends-json","$.friends","AsJson",,
-"friends-count","$.friends","AsCount",,
