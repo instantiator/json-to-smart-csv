@@ -72,6 +72,7 @@ Interpretations:
 ""AsAggregateMax""          - aggregate and find the max of numeric values from child rules
 ""AsAggregateMin""          - aggregate and find the min of numeric values from child rules
 ""AsAggregateAvg""          - aggregate and find the mean of numeric values from child rules
+""AsAggregateCount""        - count all (non-null) values from by child rules
 
 Coming soon:
 
