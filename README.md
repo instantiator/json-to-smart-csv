@@ -10,6 +10,8 @@
 |-|-|
 | `0.1` | Initial release. Simple rules defined in a CSV file direct the tool to craft CSV from JSON input. |
 | `0.2` | Switched to defining the column rules as JSON, allowing for more complex nested rules to match more complex input data. |
+| `0.3` | Refactor release - builds an intermediary tree before building the final table. Support for aggregation. |
+| `0.4` | Support for aggregation, and more complete documentation. |
 
 ## Releases
 
@@ -74,63 +76,32 @@ Provide column configuration as a JSON file:
 * `AsAggregateMin` - aggregate and find the min of numeric values from child rules
 * `AsAggregateAvg` - aggregate and find the mean of numeric values from child rules
 
-##### Coming soon...
-
-* `WithPropertiesAsColumns` - Not yet implemented, a shortcut to transform an object to columns
-
 ## Data types
 
 The root item of a JSON document is either an object or a list.
 
 1. If an object, you can start to apply rules with `$.property` paths
 2. If it's a list indexed by properties, you might use `IteratePropertiesAsList`
-2. If it's a regular list, you'll want to apply an `IterateListItems` rule
+3. If it's a regular list, you'll want to apply an `IterateListItems` rule
 
-For example, you have a list, that looks like this:
+## Examples
 
-```json
-[
-    { "name": "John" },
-    { "name": "Jane" }
-]
-```
+* [Processing a JSON list](docs/example-json-list.md)
+* [Processing a JSON object](docs/example-json-object.md)
+* [Processing JSON properties as a list](docs/example-json-props.md)
+* [Generating aggregate values](docs/example-aggregation.md)
 
-A simple rule set to extract the names from this list:
+### A fully worked example
 
-```jsonc
-{
-    "root": "$",
-    "rules": [
-        {
-            "path": "$",
-            "target": "list", // target not actually used
-            "interpretation": "IterateListItems",
-            "children":
-            [
-                {
-                    "path": "$.name",
-                    "target": "name",
-                    "interpretation": "AsString"
-                }
-            ]
-        }
-    ]
-}
-```
-
-## Example
-
-See `test-sample-osx-x64.sh` for an example. This script invokes a published copy of the tool (found at `release/osx-x64/JsonToSmartCsv`).
-
-If you need to create this, run the `publish.sh` script, or download a copy for your system from the [latest release](https://github.com/instantiator/json-to-smart-csv/releases/latest).
-
-It invokes `JsonToSmartCsv` with the following files:
+See `test-sample-osx-x64.sh` for a working sample. This script invokes `JsonToSmartCsv` with the following files:
 
 * `sample-data/sample-list.json` - some sample data
 * `sample-data/sample-rules.json` - rules to interpret them
 * `sample-data/sample-out.csv` - generated CSV output
 
 Take a look at the sample data, and sample rules to see how they interact to generate the output CSV.
+
+_Check which binary the script uses. You may need to download a copy of the release binary, or create your own with: `publish.sh`_
 
 ## Developer notes
 
@@ -157,8 +128,11 @@ Publish with the `publish.sh` script - this creates binaries at:
 
 ## TODOs
 
-Additional features I think would be fun and handy:
+Additional features:
 
+- [x] Refactor to build an intermediary tree before converting to a data table
+- [x] Add aggregate interpretations (count, min, max, avg)
+- [x] Add nested aggregate interpretations (sum across lists, etc.)
+- [x] A full set of unit tests for building the intermediary tree, and preparing data tables
+- [x] More complete documentation with examples
 - [ ] Add support for `WithPropertiesAsColumns` - a handy shortcut for simple objects
-- [ ] Add aggregate interpretations (count, min, max, avg)
-- [ ] Add nested aggregate interpretations (sum across lists, etc.)
