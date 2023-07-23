@@ -24,7 +24,7 @@ public class JsonTreeBuilderTests
     [Fact]
     public void CanInterpretSimpleNestedObject()
     {
-        var rules = RulesHelper.NestedRules;
+        var rules = RulesHelper.NestedObjectRules;
         var json = SampleDataHelper.SimpleNestedObject;
         var data = JToken.Parse(json);
         var builder = new JsonTreeBuilder(rules);
@@ -38,6 +38,30 @@ public class JsonTreeBuilderTests
         Assert.Equal("red", (tree.Items["balloons"]! as List<DataTree>)![0].Items["colour"]);
         Assert.Equal("green", (tree.Items["balloons"]! as List<DataTree>)![1].Items["colour"]);
         Assert.Equal("blue", (tree.Items["balloons"]! as List<DataTree>)![2].Items["colour"]);
+    }
+
+    [Fact]
+    public void CanInterpretSimpleNestedAggregateObjectRules()
+    {
+        var rules = RulesHelper.NestedObjectAggregateRules;
+        var json = SampleDataHelper.SimpleNestedObjectWithAmounts;
+        var data = JToken.Parse(json);
+        var builder = new JsonTreeBuilder(rules);
+        var tree = builder.BuildTree(data);
+
+        Assert.NotNull(tree);
+        Assert.Equal(8, tree.Items.Count());
+        Assert.Equal("John", tree.Items["name"]);
+        Assert.Equal("Basic clown", tree.Items["description"]);
+        Assert.Equal(3, (tree.Items["balloons"]! as List<DataTree>)!.Count());
+        Assert.Equal("red", (tree.Items["balloons"]! as List<DataTree>)![0].Items["colour"]);
+        Assert.Equal("green", (tree.Items["balloons"]! as List<DataTree>)![1].Items["colour"]);
+        Assert.Equal("blue", (tree.Items["balloons"]! as List<DataTree>)![2].Items["colour"]);
+        Assert.Equal(12m, tree.Items["avg-amount"]);
+        Assert.Equal(4m, tree.Items["min-amount"]);
+        Assert.Equal(23m, tree.Items["max-amount"]);
+        Assert.Equal(36m, tree.Items["sum-amount"]);
+        Assert.Equal(3, tree.Items["count-balloon-types"]);
     }
 
     [Fact]

@@ -26,7 +26,7 @@ namespace JsonToSmartCsv.Tests
         [Fact]
         public void CanConvertSimpleNestedObjectTreeToTable()
         {
-            var rules = RulesHelper.NestedRules;
+            var rules = RulesHelper.NestedObjectRules;
             var json = SampleDataHelper.SimpleNestedObject;
             var data = JToken.Parse(json);
             var builder = new JsonTreeBuilder(rules);
@@ -40,6 +40,32 @@ namespace JsonToSmartCsv.Tests
                 Assert.Equal(3, table.Data.ElementAt(r).Count());
                 Assert.Equal("John", table.Data.ElementAt(r)["name"]);
                 Assert.Equal("Basic clown", table.Data.ElementAt(r)["description"]);
+                Assert.Equal(colours[r], table.Data.ElementAt(r)["colour"]);
+            }
+        }
+
+        [Fact]
+        public void CanConvertSimpleNestedObjectTreeWithAggregatesToTable()
+        {
+            var rules = RulesHelper.NestedObjectAggregateRules;
+            var json = SampleDataHelper.SimpleNestedObjectWithAmounts;
+            var data = JToken.Parse(json);
+            var builder = new JsonTreeBuilder(rules);
+            var tree = builder.BuildTree(data);
+            var table = DataTableBuilder.BuildTableFromTree(tree);
+            Assert.NotNull(table);
+            Assert.Equal(3, table.Rows);
+            var colours = new[] { "red", "green", "blue" };
+            for (int r = 0; r < 3; r++)
+            {
+                Assert.Equal(8, table.Data.ElementAt(r).Count());
+                Assert.Equal("John", table.Data.ElementAt(r)["name"]);
+                Assert.Equal("Basic clown", table.Data.ElementAt(r)["description"]);
+                Assert.Equal(4m, table.Data.ElementAt(r)["min-amount"]);
+                Assert.Equal(23m, table.Data.ElementAt(r)["max-amount"]);
+                Assert.Equal(12m, table.Data.ElementAt(r)["avg-amount"]);
+                Assert.Equal(36m, table.Data.ElementAt(r)["sum-amount"]);
+                Assert.Equal(3, table.Data.ElementAt(r)["count-balloon-types"]);
                 Assert.Equal(colours[r], table.Data.ElementAt(r)["colour"]);
             }
         }

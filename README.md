@@ -69,13 +69,13 @@ Provide column configuration as a JSON file:
 * `IterateListItems` - apply child rules to the items in this list
 * `IteratePropertiesAsList` - apply child rules to the object properties, as if a list
 * `AsIndex` - item's index (IterateListItems), or property (IteratePropertiesAsList)
-
-##### Coming soon
-
 * `AsAggregateSum` - aggregate and sum all numeric values from child rules
 * `AsAggregateMax` - aggregate and find the max of numeric values from child rules
 * `AsAggregateMin` - aggregate and find the min of numeric values from child rules
 * `AsAggregateAvg` - aggregate and find the mean of numeric values from child rules
+
+##### Coming soon...
+
 * `WithPropertiesAsColumns` - Not yet implemented, a shortcut to transform an object to columns
 
 ## Data types

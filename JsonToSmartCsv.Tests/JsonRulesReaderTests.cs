@@ -19,7 +19,17 @@ public class JsonRulesReaderTests
     [Fact]
     public void RulesReaderCanReadNestedRules()
     {
-        var rules = RulesHelper.NestedRules;
+        var rules = RulesHelper.NestedObjectRules;
+        var json = JsonConvert.SerializeObject(rules);
+        var readRules = JsonRulesReader.FromString(json);
+        Assert.Equal(rules.root, readRules.root);
+        Assert.Equal(rules.rules!.Count(), readRules.rules!.Count());
+    }
+
+    [Fact]
+    public void RulesReaderCanReadNestedRulesWithAggregates()
+    {
+        var rules = RulesHelper.NestedObjectAggregateRules;
         var json = JsonConvert.SerializeObject(rules);
         var readRules = JsonRulesReader.FromString(json);
         Assert.Equal(rules.root, readRules.root);

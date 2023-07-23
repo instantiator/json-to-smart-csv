@@ -86,7 +86,7 @@ public class JsonTreeBuilder
                     break;
                 case JsonInterpretation.AsAggregateCount:
                     var countTree = BuildDataTree(selectedToken, rule.children);
-                    var nonNull = GetNonNulls(countTree);
+                    var nonNull = GetNonNullValues(countTree);
                     tree.Items.Add(rule.target!, nonNull.Count());
                     break;
                 default:
@@ -105,16 +105,31 @@ public class JsonTreeBuilder
         numbers.AddRange(tree.Items
             .Where(i => i.Value != null && i.Value is DataTree)
             .SelectMany(subtree => GetNumbers((DataTree)subtree.Value!)));
+        numbers.AddRange(tree.Items
+            .Where(i => i.Value != null && i.Value is List<DataTree>)
+            .SelectMany(list => (list.Value as List<DataTree>)!.SelectMany(GetNumbers)));
         return numbers;
     }
 
-    private IEnumerable<object> GetNonNulls(DataTree tree)
+    private IEnumerable<KeyValuePair<string, object?>> GetNonNullValues(DataTree tree)
     {
-        var nonNull = tree.Items.Where(i => i.Value != null).Select(i => (object)i.Value!).ToList();
-        nonNull.AddRange(tree.Items
-            .Where(i => i.Value != null && i.Value is DataTree)
-            .SelectMany(subtree => GetNonNulls((DataTree)subtree.Value!)));
-        return nonNull;
+        var items = new List<KeyValuePair<string, object?>>();
+        foreach (var item in tree.Items)
+        {
+            if (item.Value is DataTree)
+            {
+                items.AddRange(GetNonNullValues((DataTree)item.Value));
+            }
+            else if (item.Value is List<DataTree>)
+            {
+                items.AddRange(((List<DataTree>)item.Value).SelectMany(GetNonNullValues));
+            }
+            else
+            {
+                items.Add(KeyValuePair.Create(item.Key, item.Value));
+            }
+        }
+        return items;
     }
 
     private bool? InterpretBool(JToken? token)

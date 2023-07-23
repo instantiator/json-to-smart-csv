@@ -21,6 +21,18 @@ namespace JsonToSmartCsv.Tests.Helpers
     ]
 }";
 
+        public static string SimpleNestedObjectWithAmounts =
+@"{
+    ""name"": ""John"",
+    ""description"": ""Basic clown"",
+    ""balloons"":
+    [
+        { ""colour"": ""red"", ""amount"": 4 },
+        { ""colour"": ""green"", ""amount"": 9 },
+        { ""colour"": ""blue"", ""amount"": 23 }
+    ]
+}";
+
         public static string SimpleNestedObjectList =
 @"[
     {
