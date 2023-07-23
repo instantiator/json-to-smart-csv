@@ -6,6 +6,7 @@ public enum JsonInterpretation
     AsNumber,
     AsBoolean,
     AsJson,
+    AsIndex,
     AsAggregateSum,
     AsAggregateMax,
     AsAggregateMin,

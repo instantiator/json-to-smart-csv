@@ -1,11 +1,8 @@
 ﻿using CommandLine;
 using JsonToSmartCsv.Builder;
-using JsonToSmartCsv.Builder.Json;
 using JsonToSmartCsv.Reader;
-using JsonToSmartCsv.Rules;
 using JsonToSmartCsv.Rules.Json;
 using JsonToSmartCsv.Writer;
-using Newtonsoft.Json.Linq;
 
 namespace JsonToSmartCsv;
 
@@ -70,6 +67,7 @@ Interpretations:
 ""AsJson""                  - convert this object or list to a JSON string
 ""IterateListItems""        - apply child rules to the items in this list
 ""IteratePropertiesAsList"" - apply child rules to the object properties, as if a list
+""AsIndex""                 - item's index (IterateListItems), or property (IteratePropertiesAsList)
 
 Coming soon:
 
@@ -146,19 +144,22 @@ A simple rule set to extract the names from this list:
         Console.WriteLine($"Reading source json: {sourceFile_json}");
         var source = SmartJsonReader.Read(sourceFile_json);
 
-        Console.WriteLine($"Preparing transient records...");
-        var table = new JsonRuleRecordBuilder(rules).BuildRecords(source);
-        Console.WriteLine($"Created {table.Rows} records.");
+        Console.WriteLine($"Preparing intermediary tree...");
+        var tree = new JsonTreeBuilder(rules).BuildTree(source);
+
+        Console.WriteLine($"Preparing table...");
+        var table = DataTableBuilder.BuildTableFromTree(tree);
+        Console.WriteLine($"Created table with {table.Rows} rows.");
 
         if (mode == ProcessingMode.Create && File.Exists(targetFile_csv))
         {
             var backup = $"{targetFile_csv}.backup";
-            Console.WriteLine($"Backing up existing target to: {backup}");
+            Console.WriteLine($"Backing up existing target to: {backup}...");
             if (File.Exists(backup)) { File.Delete(backup); }
             File.Move(targetFile_csv, backup);
         }
 
-        Console.WriteLine($"Writing {table.Rows} records to target: {targetFile_csv}");
+        Console.WriteLine($"Writing output CSV to: {targetFile_csv}");
         SmartCsvWriter.Write(targetFile_csv, table, mode);
     }
 }
