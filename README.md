@@ -25,7 +25,7 @@ Download the zip file from the release, and use the binary for your system.
 ## Usage
 
 ```text
-JsonToSmartCsv -c <column-csv-file> -s <source-json-file> -t <target-csv-file> [-m <mode>] [-r <root>]
+JsonToSmartCsv -c <column-csv-file> -s <source-json-file> -t <target-csv-file> [-m <mode>]
 ```
 
 ### Options
