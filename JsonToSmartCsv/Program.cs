@@ -8,37 +8,37 @@ namespace JsonToSmartCsv;
 
 public enum ProcessingMode
 {
-    Append,
-    Create
+  Append,
+  Create
 }
 
 public class Options
 {
-    [Option('c', "columns", Required = true, HelpText = "Column definitions CSV file.")]
-    public string? ColumnsFile { get; set; }
+  [Option('c', "columns", Required = true, HelpText = "Column definitions CSV file.")]
+  public string? ColumnsFile { get; set; }
+  [Option('s', "source", Required = true, HelpText = "Source data JSON file.")]
+  public string? SourceFile { get; set; }
+  [Option('l', "json-lines", Required = false, HelpText = "Indicates if the source JSON file is in JSON Lines format", Default = false)]
+  public bool SourceAsJsonLines { get; set; }
+  [Option('t', "target", Required = true, HelpText = "Target CSV file.")]
+  public string? TargetFile { get; set; }
+  [Option('m', "mode", Required = false, HelpText = "Write mode (Append or Create)", Default = ProcessingMode.Create)]
+  public ProcessingMode Mode { get; set; }
 
-    [Option('s', "source", Required = true, HelpText = "Source data JSON file.")]
-    public string? SourceFile { get; set; }
-
-    [Option('t', "target", Required = true, HelpText = "Target CSV file.")]
-    public string? TargetFile { get; set; }
-
-    [Option('m', "mode", Required = false, HelpText = "Write mode (Append or Create)", Default = ProcessingMode.Create)]
-    public ProcessingMode Mode { get; set; }
 }
 
 public class Program
 {
-    public static void Main(string[] args)
-    {
-        CommandLine.Parser.Default.ParseArguments<Options>(args)
-            .WithParsed(RunOptions)
-            .WithNotParsed(HandleParseError);
-    }
+  public static void Main(string[] args)
+  {
+    CommandLine.Parser.Default.ParseArguments<Options>(args)
+        .WithParsed(RunOptions)
+        .WithNotParsed(HandleParseError);
+  }
 
-    private static void HandleParseError(IEnumerable<Error> errs)
-    {
-        Console.WriteLine(@"
+  private static void HandleParseError(IEnumerable<Error> errs)
+  {
+    Console.WriteLine(@"
 Modes:
 
 1. Create = create a new target file, backup any existing file
@@ -74,6 +74,12 @@ Interpretations:
 ""AsAggregateAvg""          - aggregate and find the mean of numeric values from child rules
 ""AsAggregateCount""        - count all (non-null) values from by child rules
 
+Json Lines:
+
+* If the --json-lines flag is set, the source file will be treated as JSON Lines format, and the
+  column rules will be applied to each line (as a separate JSON object).
+* Each line will be processed as the root object, and then results from that interpretation combined.
+
 Coming soon:
 
 ""WithPropertiesAsColumns"" - Not yet implemented, a shortcut to transform an object to columns
@@ -91,56 +97,57 @@ Further help:
 For more information and examples, see:
 https://github.com/instantiator/json-to-smart-csv
 ");
-    }
+  }
 
-    private static void RunOptions(Options options)
+  private static void RunOptions(Options options)
+  {
+    var colsFile_json = options.ColumnsFile;
+    var sourceFile_json = options.SourceFile;
+    var sourceAsJsonLines = options.SourceAsJsonLines;
+    var targetFile_csv = options.TargetFile;
+    var mode = options.Mode;
+
+    if (string.IsNullOrWhiteSpace(colsFile_json) || !File.Exists(colsFile_json))
     {
-        var colsFile_json = options.ColumnsFile;
-        var sourceFile_json = options.SourceFile;
-        var targetFile_csv = options.TargetFile;
-        var mode = options.Mode;
-
-        if (string.IsNullOrWhiteSpace(colsFile_json) || !File.Exists(colsFile_json))
-        {
-            Console.WriteLine("Please provide a column specification json config file.");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(sourceFile_json) || !File.Exists(sourceFile_json))
-        {
-            Console.WriteLine("Please provide a source json file.");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(targetFile_csv))
-        {
-            Console.WriteLine("Please provide a target file to create.");
-            return;
-        }
-
-        Console.WriteLine($"Reading rules: {colsFile_json}");
-        var rules = JsonRulesReader.FromFile(colsFile_json);
-
-        Console.WriteLine($"Reading source json: {sourceFile_json}");
-        var source = SmartJsonReader.Read(sourceFile_json);
-
-        Console.WriteLine($"Preparing intermediary tree...");
-        var tree = new JsonTreeBuilder(rules).BuildTree(source);
-
-        Console.WriteLine($"Preparing table...");
-        var table = DataTableBuilder.BuildTableFromTree(tree);
-        Console.WriteLine($"Created table with {table.Rows} rows.");
-
-        if (mode == ProcessingMode.Create && File.Exists(targetFile_csv))
-        {
-            var backup = $"{targetFile_csv}.backup";
-            Console.WriteLine($"Backing up existing target to: {backup}...");
-            if (File.Exists(backup)) { File.Delete(backup); }
-            File.Move(targetFile_csv, backup);
-        }
-
-        Console.WriteLine($"Writing output CSV to: {targetFile_csv}");
-        SmartCsvWriter.Write(targetFile_csv, table, mode);
+      Console.WriteLine("Please provide a column specification json config file.");
+      return;
     }
+
+    if (string.IsNullOrWhiteSpace(sourceFile_json) || !File.Exists(sourceFile_json))
+    {
+      Console.WriteLine("Please provide a source json file.");
+      return;
+    }
+
+    if (string.IsNullOrWhiteSpace(targetFile_csv))
+    {
+      Console.WriteLine("Please provide a target file to create.");
+      return;
+    }
+
+    Console.WriteLine($"Reading rules: {colsFile_json}");
+    var rules = JsonRulesReader.FromFile(colsFile_json);
+
+    Console.WriteLine($"Reading source json: {sourceFile_json}");
+    var source = SmartJsonReader.Read(sourceFile_json, sourceAsJsonLines);
+
+    Console.WriteLine($"Preparing intermediary tree...");
+    var trees = new JsonTreeBuilder(rules).BuildTree(source, sourceAsJsonLines);
+
+    Console.WriteLine($"Preparing table...");
+    var table = DataTableBuilder.BuildTableFromTrees(trees);
+    Console.WriteLine($"Created table with {table.Rows} rows.");
+
+    if (mode == ProcessingMode.Create && File.Exists(targetFile_csv))
+    {
+      var backup = $"{targetFile_csv}.backup";
+      Console.WriteLine($"Backing up existing target to: {backup}...");
+      if (File.Exists(backup)) { File.Delete(backup); }
+      File.Move(targetFile_csv, backup);
+    }
+
+    Console.WriteLine($"Writing output CSV to: {targetFile_csv}");
+    SmartCsvWriter.Write(targetFile_csv, table, mode);
+  }
 }
 
